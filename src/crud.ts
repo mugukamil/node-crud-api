@@ -1,6 +1,9 @@
-import { User, users } from "./data/users";
+import { User } from "./data/users";
 import { getPayload } from "./utils";
 import { v4 as uuidv4 } from "uuid";
+import { Store } from "./store";
+
+const store = Store.getInstance();
 
 export type ResponseData = {
     code: number;
@@ -11,9 +14,9 @@ export const requiredFields: Array<keyof User> = ["username", "age", "hobbies"];
 
 export const crud: { [key: string]: (...args: any[]) => Promise<ResponseData> | ResponseData } = {
     get(req, id) {
-        if (!id) return { code: 200, data: users };
-        const user = users.find((u) => u?.id === id);
-        return user ? { code: 200, data: user } : { code: 400, data: { message: "not found" } };
+        if (!id) return { code: 200, data: store.getAll() };
+        const user = store.getAll().find((u) => u?.id === id);
+        return user ? { code: 200, data: user } : { code: 404, data: { message: "not found" } };
     },
     async post(req, id) {
         const payload = await getPayload(req);
@@ -25,7 +28,7 @@ export const crud: { [key: string]: (...args: any[]) => Promise<ResponseData> | 
             id: uuidv4(),
             ...payload,
         };
-        users.push(user);
+        store.add(user);
 
         return { code: 201, data: user };
     },
@@ -35,22 +38,22 @@ export const crud: { [key: string]: (...args: any[]) => Promise<ResponseData> | 
             return { code: 400, data: { message: "Invalid payload" } };
         }
 
-        let userIndex = users.findIndex((user) => user?.id === id);
+        let userIndex = store.getAll().findIndex((user) => user?.id === id);
         if (userIndex === -1) {
             return { code: 400, data: { message: "User doesn't exist" } };
         }
 
-        const user = { ...users[userIndex], ...payload };
-        users[userIndex] = user;
+        const user = { ...store.getAll()[userIndex], ...payload };
+        store.update(id, user);
 
         return { code: 200, data: user };
     },
     delete(req, id) {
-        let userIndex = users.findIndex((user) => user.id === id);
+        let userIndex = store.getAll().findIndex((user) => user.id === id);
         if (userIndex === -1) {
             return { code: 400, data: { message: "User doesn't exist" } };
         }
-        users.splice(userIndex, 1);
+        store.delete(id);
         return { code: 204, data: null };
     },
 };
