@@ -1,6 +1,6 @@
 # Node.js CRUD API
 
-A simple REST API implementation using pure Node.js and TypeScript.
+A simple REST API implementation using pure Node.js and TypeScript with horizontal scaling capabilities.
 
 ## Prerequisites
 
@@ -25,16 +25,36 @@ npm install
 3. Create a `.env` file in the root directory:
 
 ```bash
-PORT=3000
+PORT=4000
 ```
 
 ## Running the Application
 
-Development mode with auto-reload:
+There are three modes to run the application:
+
+### Development Mode (with auto-reload)
 
 ```bash
 npm run start:dev
 ```
+
+### Production Mode (optimized build)
+
+```bash
+npm run start:prod
+```
+
+### Multi-Instance Mode (with load balancer)
+
+```bash
+npm run start:multi
+```
+
+This mode starts multiple instances:
+
+- Load balancer on PORT (default: 4000)
+- Worker instances on PORT+1, PORT+2, etc.
+- Automatically scales based on CPU cores
 
 ## API Endpoints
 
@@ -122,10 +142,18 @@ crud-api/
 ├── src/
 │   ├── data/
 │   │   └── users.ts
+│   ├── cluster.ts
+│   ├── loadBalancer.ts
+│   ├── store.ts
+│   ├── server.ts
 │   ├── utils.ts
+│   ├── crud.ts
 │   └── index.ts
+├── __tests__/
+│   └── crud.test.ts
 ├── package.json
 ├── tsconfig.json
+├── webpack.config.js
 └── .env
 ```
 
@@ -135,3 +163,24 @@ crud-api/
 - TypeScript
 - UUID for generating unique identifiers
 - dotenv for environment variables
+- Jest for testing
+- webpack for production builds
+
+## Testing
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+The tests cover:
+
+- Basic CRUD operations
+- Error handling
+- Invalid input scenarios
+- Data consistency
+
+## Load Balancing
+
+In multi-instance mode, the application uses a Round-robin algorithm to distribute requests across worker instances. State is synchronized across all instances using Node.js IPC mechanisms.
