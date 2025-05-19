@@ -1,15 +1,14 @@
-import http from "http";
 import dotenv from "dotenv";
+import { startCluster } from "./cluster";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
-
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.end("Server is running");
-});
-
-server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+if (process.env.NODE_ENV === "multi") {
+    startCluster();
+} else {
+    const PORT = parseInt(process.env.PORT || "4000");
+    import("./server").then(({ createServer }) => {
+        createServer(PORT);
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
